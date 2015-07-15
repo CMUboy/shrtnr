@@ -1,36 +1,49 @@
 require 'spec_helper'
 
 describe "creating a short url" do
-  let(:long_url) { "http://www.wsj.com" }
-
   context "when not signed in" do
-
     before do
-      visit "/"
-      fill_in "long_url", with: long_url
-      click_button "Shorten It!"
+      visit "/home"
     end
 
-    it "creates a short url" do
-      expect(current_path).to start_with "/links"
+    it "fails if url is not valid" do
+      fill_in "link[long_url]", with: "nonsense"
+      click_button "Shorten It!"
+      expect(page).to have_content "Your URL was not valid"
+    end
+
+    it "creates a short_url if valid" do
+      fill_in "link[long_url]", with: "http://google.com"
+      click_button "Shorten It!"
+      expect(page).to have_content "URL added"
     end
   end
 
   context "when signed in" do
     let(:user) { create(:user) }
 
-    scenario "creating a new short url" do
+    before do
       login_as user
       visit "/dashboard"
-      fill_in "long_url", with: long_url
+    end
+
+    it "fails if url is not valid" do
+      fill_in "link[long_url]", with: "nonsense"
       click_button "Shorten It!"
+      expect(page).to have_content "Your URL was not valid"
+    end
 
-      expect(current_path).to start_with "/links"
+    it "creates a short_url if valid" do
+      fill_in "link[long_url]", with: "http://google.com"
+      click_button "Shorten It!"
       expect(page).to have_content "URL added"
+    end
 
+    it "adds link to dashboard" do
+      fill_in "link[long_url]", with: "http://google.com"
+      click_button "Shorten It!"
       visit "/dashboard"
-
-      expect(page).to have_content long_url
+      expect(page).to have_content "http://google.com"
     end
   end
 end
